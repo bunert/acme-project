@@ -125,5 +125,7 @@ class Identifier(object):
     def __init__(self, value):
         self.value = value
 
-    def set_challenges(self, challenges):
-        self.challenge_array = [c for c in challenges]
+    def set_IdentifierData(self, json):
+        self.challenge_array = [c for c in json["challenges"]]
+        self.expires = json["expires"]
+        self.status = json["status"]

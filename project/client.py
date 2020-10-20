@@ -53,6 +53,13 @@ class ACMEClient(object):
             self.kid = resp.headers['Location']
             self.nonce = resp.headers['Replay-nonce']
 
+    def post_AccountUpdate(self):
+        # required?
+        pass
+    def post_AccountDeactivation(self):
+        # required? 
+        pass
+
     def post_newOrder(self):
         # TODO: values as input???
         data = self.jws.get_newOrderData(self.UrlDict["newOrder"], self.nonce, self.kid, [id.value for id in self.identifiers])
@@ -73,13 +80,12 @@ class ACMEClient(object):
         data = self.jws.get_newAuthzData(self.authorizations_url[0], self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
         resp = requests.post(self.authorizations_url[0], data=data, headers=headers, verify=False)
-        print(resp.text)
         if resp.status_code not in [requests.codes.ok]:
             print("get_newAuthz: ", resp.status_code)
         else:
             self.nonce = resp.headers['Replay-nonce']
             resp_json = json.loads(resp.text)
-            self.identifiers[0].set_challenges(resp_json["challenges"])
+            self.identifiers[0].set_IdentifierData(resp_json)
 
 
 
