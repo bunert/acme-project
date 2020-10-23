@@ -3,6 +3,12 @@ import json
 import base64
 import crypto
 import constants
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import hashes
+
 
 def b64encode(msg):
     if not isinstance(msg, bytes):
@@ -37,6 +43,13 @@ class JSONWebSignature(object):
 
         return b64encode(crypto.ecdsa_sign(self.sk, sign_msg_encoded))
 
+    def get_keyAuthorization(self):
+        jwk_dict = {}
+        jwk_dict["crv"] = str(self.pk.curve[5:])
+        jwk_dict["kty"] = "EC"
+        jwk_dict["x"] = str(b64encode((self.pk.pointQ.x).to_bytes(constants.EC_COORDINATE_LEN)))
+        jwk_dict["y"] = str(b64encode((self.pk.pointQ.y).to_bytes(constants.EC_COORDINATE_LEN)))
+        return json.dumps(jwk_dict, sort_keys=True, separators=(',', ':'))
     def get_jwkHeader(self, url, nonce):
         self.kid = "1"
         jwk_dict = {}
@@ -107,12 +120,33 @@ class JSONWebSignature(object):
 
         return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
 
-    def get_finalizeOrderData(self, url, nonce, kid):
+    def get_ChallengeReadyData(self, url, nonce, kid):
+        header_json = self.get_kidHeader(kid, nonce, url)
+        jws_protected_header = b64encode(header_json)
+
+        payload_json = json.dumps({})
+
+        jws_payload = b64encode(payload_json)
+
+        jws_signature = self.get_jwsSignature(jws_protected_header, jws_payload)
+
+        return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
+
+    def get_finalizeOrderData(self, url, nonce, kid, identifiers):
         header_json = self.get_kidHeader(kid, nonce, url)
         jws_protected_header = b64encode(header_json)
 
         payload_dict = {}
-        payload_dict["csr"] = "test"
+        key = ec.generate_private_key(ec.SECP256R1())
+        self.cert_key = key
+
+        list = [x509.DNSName(elem.value) for elem in identifiers]
+
+        csr = x509.CertificateSigningRequestBuilder() \
+                .subject_name(x509.Name([])) \
+                .add_extension(x509.SubjectAlternativeName(list),critical=False).sign(key, hashes.SHA256())
+
+        payload_dict["csr"] = b64encode(csr.public_bytes(serialization.Encoding.DER))
         payload_json = json.dumps(payload_dict)
 
         jws_payload = b64encode(payload_json)
@@ -121,11 +155,69 @@ class JSONWebSignature(object):
 
         return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
 
+    def get_checkOrderData(self, url, nonce, kid):
+        header_json = self.get_kidHeader(kid, nonce, url)
+        jws_protected_header = b64encode(header_json)
+
+        payload = ""
+
+        jws_payload = b64encode(payload)
+
+        jws_signature = self.get_jwsSignature(jws_protected_header, jws_payload)
+
+        return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
+
+    def get_DownloadCertData(self, url, nonce, kid):
+        # TODO:
+        header_json = self.get_kidHeader(kid, nonce, url)
+        jws_protected_header = b64encode(header_json)
+
+        jws_payload = ""
+
+        jws_signature = self.get_jwsSignature(jws_protected_header, jws_payload)
+
+        return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
+
+    def get_RevokeCertData(self, url, nonce, kid, cert):
+        # TODO:
+        header_json = self.get_kidHeader(kid, nonce, url)
+        jws_protected_header = b64encode(header_json)
+
+        cert_val = cert.public_bytes(serialization.Encoding.DER)
+
+        payload_dict = {}
+        payload_dict["certificate"] = b64encode(cert_val)
+        payload_dict["reason"] = 4
+        payload_json = json.dumps(payload_dict)
+
+        jws_payload = b64encode(payload_json)
+
+        jws_signature = self.get_jwsSignature(jws_protected_header, jws_payload)
+
+        return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
+
+
 class Identifier(object):
     def __init__(self, value):
         self.value = value
 
-    def set_IdentifierData(self, json):
-        self.challenge_array = [c for c in json["challenges"]]
+    def set_IdentifierData(self, json, jws):
+        self.challenge_array = [Challenge(c, jws) for c in json["challenges"]]
         self.expires = json["expires"]
         self.status = json["status"]
+
+class Challenge(object):
+    def __init__(self, challenge, jws):
+        self.type = challenge["type"]
+        self.url = challenge["url"]
+        self.token = challenge["token"]
+        self.status = challenge["status"]
+
+
+        msg = jws.get_keyAuthorization().encode('utf-8')
+        hash = crypto.get_thumbprint(msg)
+        accountKeyThumbprint = b64encode(hash)
+        self.keyAuthorization = '.'.join([self.token, accountKeyThumbprint])
+
+        dnsHash = crypto.get_thumbprint(self.keyAuthorization.encode('utf-8'))
+        self.dnsAuthorization = b64encode(dnsHash)

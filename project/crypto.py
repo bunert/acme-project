@@ -8,6 +8,9 @@ import constants
 def get_nonce():
     return get_random_bytes(constants.NONCE_LEN)
 
+def get_thumbprint(msg):
+    return SHA256.new(msg).digest()
+
 def ecdsa_key_gen():
 	sk = ECC.generate(curve='P-256')
 	pk = sk.public_key()
