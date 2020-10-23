@@ -4,4 +4,5 @@ DIRECTORY=$(dirname "$0")
 cd  "$DIRECTORY" || exit 1
 
 # echo "Run your project here."
+python3 challengeHttpServer.py
 python3 main.py "$@"

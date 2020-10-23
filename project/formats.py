@@ -139,6 +139,10 @@ class JSONWebSignature(object):
         payload_dict = {}
         key = ec.generate_private_key(ec.SECP256R1())
         self.cert_key = key
+        with open("key.pem", "wb") as f:
+            f.write(key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption()))
+
+
 
         list = [x509.DNSName(elem.value) for elem in identifiers]
 

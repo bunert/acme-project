@@ -62,6 +62,8 @@ class ACMEClient(object):
         resp = requests.post(self.UrlDict["newAccount"], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.created]:
             print("get_newAccount: ", resp.status_code)
+            self.get_newNonce()
+            self.post_newAccount()
         else:
             # handle response
             self.kid = resp.headers['Location']
@@ -82,6 +84,8 @@ class ACMEClient(object):
         resp = requests.post(self.UrlDict["newOrder"], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.created]:
             print("get_newOrder: ", resp.status_code)
+            self.get_newNonce()
+            self.post_newOrder()
         else:
             # handle response
             self.nonce = resp.headers['Replay-nonce']
@@ -97,6 +101,8 @@ class ACMEClient(object):
         resp = requests.post(self.authorizations_url[index], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_newAuthz: ", resp.status_code)
+            self.get_newNonce()
+            self.post_newAuthz(index)
         else:
             # handle response
             self.nonce = resp.headers['Replay-nonce']
@@ -112,6 +118,8 @@ class ACMEClient(object):
         resp = requests.post(url, data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_ChallengeReady: ", resp.status_code)
+            self.get_newNonce()
+            self.post_ChallengeReady(index, challenge)
             # TODO: On receiving such an error, the client SHOULD undo any actions that have been
             # taken to fulfill the challenge, e.g., removing files that have been provisioned to a web server.
         else:
@@ -124,6 +132,8 @@ class ACMEClient(object):
         resp = requests.post(self.authorizations_url[index], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkStatus: ", resp.status_code)
+            self.get_newNonce()
+            self.post_checkStatus(index)
         else:
             # handle response
             # print(resp.text)
@@ -142,7 +152,6 @@ class ACMEClient(object):
             print("post_finalizeOrder: ", resp.status_code)
         else:
             # handle response
-            # print(resp.headers)
             self.nonce = resp.headers['Replay-nonce']
             resp_json = json.loads(resp.text)
 
@@ -152,6 +161,8 @@ class ACMEClient(object):
         resp = requests.post(self.UrlDict["order"], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkOrder: ", resp.status_code)
+            self.get_newNonce()
+            self.post_checkOrder()
         else:
             # handle response
             # print(resp.text)
@@ -170,6 +181,8 @@ class ACMEClient(object):
         resp = requests.post(self.UrlDict["cert"], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_DownloadCert: ", resp.status_code)
+            self.get_newNonce()
+            self.post_DownloadCert()
         else:
             self.nonce = resp.headers['Replay-nonce']
             cert = x509.load_pem_x509_certificate(resp.text.encode('utf-8'), default_backend())
@@ -182,6 +195,8 @@ class ACMEClient(object):
         resp = requests.post(self.UrlDict["revokeCert"], data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_revokeCert: ", resp.status_code)
+            self.get_newNonce()
+            self.post_revokeCert(cert)
         else:
             # handle response
             self.nonce = resp.headers['Replay-nonce']

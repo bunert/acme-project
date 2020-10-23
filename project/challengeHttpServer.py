@@ -6,8 +6,10 @@ import threading
 
 
 
-api = Flask(__name__)
-api.debug = False
+api = Flask("challengeHttpServer")
+api.logger.disabled = True
+log = logging.getLogger('werkzeug')
+log.disabled = True
 
 keyAuthorization = {}
 
@@ -22,11 +24,19 @@ def post_acme_challenge(token):
     keyAuthorization[token] = request.json['keyAuthorization']
     return json.dumps({"success": True}), 201
 
-# def run_server():
-#     api.run(port=5002)
 
-if __name__ == '__main__':
-    # server = threading.Thread(target=lambda: api.run(port=5002, threaded=True))
-    # server.daemon = True
-    # server.start()
-    api.run(port=5002)
+def start_server():
+    port = 5002
+    global api
+    t = threading.Thread(target=api.run(port=port))
+    t.daemon = True
+    t.start()
+    return t
+
+start_server()
+
+# if __name__ == '__main__':
+#     # server = threading.Thread(target=lambda: api.run(port=5002, threaded=True))
+#     # server.daemon = True
+#     # server.start()
+#     api.run(port=5002)

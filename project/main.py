@@ -1,11 +1,16 @@
 import client
 import argparse
 import challengeHttpServer
+import certificateHttpServer
+import shutdownHttpServer
 import dnsServer
 import json
 import socket
 import time
 import crypto
+import requests
+import sys
+from cryptography.hazmat.primitives import serialization
 
 
 # TODO: remove (requests warning surpression)
@@ -35,7 +40,13 @@ else:
 resolver = dnsServer.setup_resolver('1.2.3.4')
 udp_server = dnsServer.run_server(resolver)
 
-# start httpServer using args.domain
+
+# start shutdownHttpServer
+shutdownServer = shutdownHttpServer.start_server()
+
+# start challengeHttpServer
+# challengeServer = challengeHttpServer.start_server()
+
 
 test_client = client.ACMEClient(args.dir, args.domain)
 # test_client.get_rootCert()
@@ -60,11 +71,14 @@ else:
 
 test_client.post_ChallengeReady(index, challenge)
 
-time.sleep(3)
-# should be valid now
+time.sleep(5)
 test_client.post_checkStatus(index)
 
-time.sleep(2)
+time.sleep(5)
+test_client.post_checkStatus(index)
+
+time.sleep(5)
+
 test_client.post_checkOrder()
 
 test_client.post_finalizeOrder()
@@ -73,11 +87,15 @@ ret = test_client.post_checkOrder()
 
 if (ret):
     cert = test_client.post_DownloadCert()
+    with open("certificate.pem", "wb") as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
+    # start certificateHttpServer
+    certServer = certificateHttpServer.start_server()
 
-test_client.post_revokeCert(cert)
+
 
 try:
-    while udp_server.isAlive():
+    while shutdownServer.is_alive():
         time.sleep(1)
 except KeyboardInterrupt:
     pass
