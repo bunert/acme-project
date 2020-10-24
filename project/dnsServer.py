@@ -52,20 +52,20 @@ def run_server(resolver):
     return udp_server
 
 
-if __name__ == '__main__':
-
-    # domain = dnslib.label('www.example.com')
-    domain = dnslib.label('_acme-challenge.www.example.com')
-    logger = dnslib.server.DNSLogger("pass")
-    port=10053
-    resolver = Resolver(domain, dnslib.A('1.2.3.4'))
-    udp_server = dnslib.server.DNSServer(resolver, address='127.0.0.1', port=port, logger=logger)
-
-    print('starting DNS server on port', port)
-    udp_server.start_thread()
-
-    try:
-        while udp_server.isAlive():
-            time.sleep(1)
-    except KeyboardInterrupt:
-        pass
+# if __name__ == '__main__':
+#
+#     # domain = dnslib.label('www.example.com')
+#     domain = dnslib.label('_acme-challenge.www.example.com')
+#     logger = dnslib.server.DNSLogger("pass")
+#     port=10053
+#     resolver = Resolver(domain, dnslib.A('1.2.3.4'))
+#     udp_server = dnslib.server.DNSServer(resolver, address='127.0.0.1', port=port, logger=logger)
+#
+#     print('starting DNS server on port', port)
+#     udp_server.start_thread()
+#
+#     try:
+#         while udp_server.isAlive():
+#             time.sleep(1)
+#     except KeyboardInterrupt:
+#         pass

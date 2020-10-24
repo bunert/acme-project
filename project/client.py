@@ -170,7 +170,7 @@ class ACMEClient(object):
             resp_json = json.loads(resp.text)
             if (resp_json["status"] == "valid"):
                 self.UrlDict["cert"] = resp_json["certificate"]
-                return True
+            return resp_json["status"]
         return False
 
 

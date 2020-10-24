@@ -1,15 +1,10 @@
 import client
 import argparse
-import challengeHttpServer
 import certificateHttpServer
 import shutdownHttpServer
 import dnsServer
-import json
-import socket
 import time
-import crypto
-import requests
-import sys
+import subprocess
 from cryptography.hazmat.primitives import serialization
 
 
@@ -37,7 +32,7 @@ else:
     print("wrong challenge")
 
 # start dnsServer using the args.record as ip address
-resolver = dnsServer.setup_resolver('1.2.3.4')
+resolver = dnsServer.setup_resolver(args.record)
 udp_server = dnsServer.run_server(resolver)
 
 
@@ -46,6 +41,9 @@ shutdownServer = shutdownHttpServer.start_server()
 
 # start challengeHttpServer
 # challengeServer = challengeHttpServer.start_server()
+challengeServer = subprocess.Popen(['python3', 'challengeHttpServer.py'])
+
+time.sleep(3)
 
 
 test_client = client.ACMEClient(args.dir, args.domain)
@@ -71,21 +69,24 @@ else:
 
 test_client.post_ChallengeReady(index, challenge)
 
-time.sleep(5)
-test_client.post_checkStatus(index)
+# time.sleep(5)
+# test_client.post_checkStatus(index)
+#
+# time.sleep(5)
+# test_client.post_checkStatus(index)
+#
+# time.sleep(5)
+limit = 0
+while (test_client.post_checkOrder() != 'ready' and limit < 10):
+    limit += 1
+    time.sleep(2)
 
-time.sleep(5)
-test_client.post_checkStatus(index)
-
-time.sleep(5)
-
-test_client.post_checkOrder()
 
 test_client.post_finalizeOrder()
 
-ret = test_client.post_checkOrder()
+status = test_client.post_checkOrder()
 
-if (ret):
+if (status == 'valid'):
     cert = test_client.post_DownloadCert()
     with open("certificate.pem", "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
@@ -99,3 +100,5 @@ try:
         time.sleep(1)
 except KeyboardInterrupt:
     pass
+finally:
+    challengeServer.terminate()

@@ -25,18 +25,11 @@ def post_acme_challenge(token):
     return json.dumps({"success": True}), 201
 
 
-def start_server():
+
+if __name__ == '__main__':
+    # server = threading.Thread(target=lambda: api.run(port=5002, threaded=True))
+    # server.daemon = True
+    # server.start()
     port = 5002
-    global api
-    t = threading.Thread(target=api.run(port=port))
-    t.daemon = True
-    t.start()
-    return t
-
-start_server()
-
-# if __name__ == '__main__':
-#     # server = threading.Thread(target=lambda: api.run(port=5002, threaded=True))
-#     # server.daemon = True
-#     # server.start()
-#     api.run(port=5002)
+    print("challenge server on port: ", port)
+    api.run(port=port)
