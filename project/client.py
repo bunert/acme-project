@@ -12,7 +12,6 @@ class ACMEClient(object):
     def __init__(self, url, values):
         self.UrlDict = {}
         self.UrlDict["dir"] = url
-        self.url = 'https://0.0.0.0:14000/'
         self.nonce = ""
 
         sk, pk = crypto.ecdsa_key_gen()
@@ -162,7 +161,7 @@ class ACMEClient(object):
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkOrder: ", resp.status_code)
             self.get_newNonce()
-            self.post_checkOrder()
+            return self.post_checkOrder()
         else:
             # handle response
             # print(resp.text)
@@ -171,8 +170,7 @@ class ACMEClient(object):
             if (resp_json["status"] == "valid"):
                 self.UrlDict["cert"] = resp_json["certificate"]
             return resp_json["status"]
-        return False
-
+        return 'false'
 
     def post_DownloadCert(self):
         data = self.jws.get_DownloadCertData(self.UrlDict["cert"], self.nonce, self.kid)

@@ -32,7 +32,8 @@ else:
     print("wrong challenge")
 
 # start dnsServer using the args.record as ip address
-resolver = dnsServer.setup_resolver(args.record)
+print(args.domain[0])
+resolver = dnsServer.setup_resolver(args.record, args.domain[0])
 udp_server = dnsServer.run_server(resolver)
 
 
@@ -43,7 +44,7 @@ shutdownServer = shutdownHttpServer.start_server()
 # challengeServer = challengeHttpServer.start_server()
 challengeServer = subprocess.Popen(['python3', 'challengeHttpServer.py'])
 
-time.sleep(3)
+time.sleep(1)
 
 
 test_client = client.ACMEClient(args.dir, args.domain)
@@ -94,6 +95,7 @@ if (status == 'valid'):
     certServer = certificateHttpServer.start_server()
 
 
+print("finished")
 
 try:
     while shutdownServer.is_alive():

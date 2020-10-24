@@ -36,8 +36,8 @@ class Resolver(object):
         reply.header.rcode = dnslib.RCODE.NXDOMAIN
         return reply
 
-def setup_resolver(ip):
-    domain = dnslib.label('_acme-challenge.www.example.com')
+def setup_resolver(ip, dom):
+    domain = dnslib.label('_acme-challenge.'+dom)
 
     resolver = Resolver(domain, dnslib.A(ip))
     return resolver
