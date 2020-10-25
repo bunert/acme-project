@@ -19,10 +19,10 @@ import threading
 
 
 
-def start_server():
+def start_server(ip):
     handler = SimpleHTTPRequestHandler
     port = 5001
-    httpd = HTTPServer(('', port), SimpleHTTPRequestHandler)
+    httpd = HTTPServer((ip, port), SimpleHTTPRequestHandler)
 
     httpd.socket = ssl.wrap_socket(httpd.socket, keyfile="key.pem",certfile='certificate.pem', server_side=True)
     print("certificate server on port: ", port)

@@ -43,10 +43,10 @@ def setup_resolver(ip, dom):
     return resolver
 
 
-def run_server(resolver):
+def run_server(resolver, ip):
     port=10053
     logger = dnslib.server.DNSLogger("pass")
-    udp_server = dnslib.server.DNSServer(resolver, address='127.0.0.1', port=port, logger=logger)
+    udp_server = dnslib.server.DNSServer(resolver, address=ip, port=port, logger=logger)
     print('starting DNS server on port', port)
     udp_server.start_thread()
     return udp_server

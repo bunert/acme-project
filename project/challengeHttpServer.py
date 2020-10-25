@@ -3,7 +3,12 @@ from flask import request
 import logging
 import os
 import threading
+import argparse
 
+parser = argparse.ArgumentParser(description='ACME challengeHttpServer')
+parser.add_argument('record', help='Challenge Type')
+
+args = parser.parse_args()
 
 
 api = Flask("challengeHttpServer")
@@ -32,4 +37,4 @@ if __name__ == '__main__':
     # server.start()
     port = 5002
     print("challenge server on port: ", port)
-    api.run(port=port)
+    api.run(host=args.record, port=port)

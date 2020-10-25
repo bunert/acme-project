@@ -34,15 +34,15 @@ else:
 # start dnsServer using the args.record as ip address
 print(args.domain[0])
 resolver = dnsServer.setup_resolver(args.record, args.domain[0])
-udp_server = dnsServer.run_server(resolver)
+udp_server = dnsServer.run_server(resolver, args.record)
 
 
 # start shutdownHttpServer
-shutdownServer = shutdownHttpServer.start_server()
+shutdownServer = shutdownHttpServer.start_server(args.record)
 
 # start challengeHttpServer
 # challengeServer = challengeHttpServer.start_server()
-challengeServer = subprocess.Popen(['python3', 'challengeHttpServer.py'])
+challengeServer = subprocess.Popen(['python3', 'challengeHttpServer.py', args.record])
 
 time.sleep(1)
 
@@ -61,7 +61,7 @@ index=0
 test_client.post_newAuthz(index)
 
 if (challenge=='http-01'):
-    challenge_http_url = 'http://localhost:5002/'
+    challenge_http_url = args.domain[0] #'http://localhost:5002/'
     test_client.post_newHttpChallenge(index, challenge_http_url, challenge)
 else:
     # dns challenge
@@ -92,7 +92,7 @@ if (status == 'valid'):
     with open("certificate.pem", "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
     # start certificateHttpServer
-    certServer = certificateHttpServer.start_server()
+    certServer = certificateHttpServer.start_server(args.record)
 
 
 print("finished")

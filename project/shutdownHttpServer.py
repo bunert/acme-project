@@ -13,11 +13,11 @@ class CustomHandler(SimpleHTTPRequestHandler):
         return SimpleHTTPRequestHandler.do_GET(self)
 
 
-def start_server():
+def start_server(ip):
     handler = SimpleHTTPRequestHandler
     port = 5003
     global httpd
-    httpd = socketserver.ThreadingTCPServer(('', port), CustomHandler)
+    httpd = socketserver.ThreadingTCPServer((ip, port), CustomHandler)
     httpd.daemon=True
     httpd.allow_reuse_address = True
     print("shutdown server on port: ", port)
