@@ -17,7 +17,7 @@ parser.add_argument('challenge', help='Challenge Type')
 parser.add_argument('--dir', dest='dir', default='https://1.1.1.1:14000/dir',help='DIR_URL is the directory URL of the ACME server that should be used.')
 parser.add_argument('--record', dest='record', default='1.2.3.4',help='IPv4_ADDRESS is the IPv4 address which must be returned by your DNS server for all A-record queries')
 parser.add_argument('--domain', dest='domain',action='append' ,help='DOMAIN  is the domain for  which to request the certificate.')
-parser.add_argument('--revoke', dest='revoke', help='revoke certificates after they have been issued by the ACME server.')
+parser.add_argument('--revoke', dest='revoke',action='store_true', help='revoke certificates after they have been issued by the ACME server.')
 
 args = parser.parse_args()
 
