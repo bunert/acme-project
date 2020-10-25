@@ -1,7 +1,7 @@
-from Cryptodome.PublicKey import ECC
-from Cryptodome.Signature import DSS
-from Cryptodome.Hash import SHA256
-from Cryptodome.Random import get_random_bytes
+from Crypto.PublicKey import ECC
+from Crypto.Signature import DSS
+from Crypto.Hash import SHA256
+from Crypto.Random import get_random_bytes
 import constants
 
 

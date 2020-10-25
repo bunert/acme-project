@@ -1,4 +1,4 @@
-from Cryptodome.PublicKey import ECC
+from Crypto.PublicKey import ECC
 import json
 import base64
 import crypto
