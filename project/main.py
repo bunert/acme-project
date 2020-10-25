@@ -69,7 +69,9 @@ for i in range(len(args.domain)):
     else:
         # dns challenge
         c = test_client.get_challenge(i, challenge)
-        resolver.txt.append(c.dnsAuthorization)
+        resolver.txt[i] = c.dnsAuthorization
+        print("added dns entry: ", args.domain[i])
+        print(c.dnsAuthorization)
         # print(resolver.txt)
 
 for i in range(len(args.domain)):

@@ -10,7 +10,7 @@ class Resolver(object):
         self.domains = domains
         self.raw_domains = raw_domains
         self.server_ip = server_ip
-        self.txt = []
+        self.txt = [None] * len(raw_domains)
 
     def resolve(self, request, handler):
         reply = request.reply()
@@ -47,6 +47,8 @@ class Resolver(object):
                 index = i
         # print(self.domains)
         # print(index)
+        print("DNS request for: ", second_domain_part)
+        print("result: ", self.txt[index])
 
         if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT and self.txt != ''):
             reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[index])));
