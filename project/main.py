@@ -57,18 +57,23 @@ test_client.post_newAccount()
 test_client.post_newOrder()
 
 # index indicated for which domain in array ['www.example.com', 'example.com']
-index=0
-test_client.post_newAuthz(index)
+# index=0
+for i in range(len(args.domain)):
+    test_client.post_newAuthz(i)
 
-if (challenge=='http-01'):
-    # challenge_http_url ='http://localhost:5002/'
-    test_client.post_newHttpChallenge(index, args.record, challenge)
-else:
-    # dns challenge
-    c = test_client.get_challenge(index, challenge)
-    resolver.txt = c.dnsAuthorization
+# test_client.post_newAuthz(index)
 
-test_client.post_ChallengeReady(index, challenge)
+for i in range(len(args.domain)):
+    if (challenge=='http-01'):
+        # challenge_http_url ='http://localhost:5002/'
+        test_client.post_newHttpChallenge(i, args.record, challenge)
+    else:
+        # dns challenge
+        c = test_client.get_challenge(i, challenge)
+        resolver.txt = c.dnsAuthorization
+
+for i in range(len(args.domain)):
+    test_client.post_ChallengeReady(i, challenge)
 
 # time.sleep(5)
 # test_client.post_checkStatus(index)
