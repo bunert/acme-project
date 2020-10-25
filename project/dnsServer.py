@@ -6,10 +6,11 @@ import dnslib.server
 
 # used https://github.com/CryptoPunk/tlsmy.net/blob/master/server/dnsserver.py as a reference
 class Resolver(object):
-    def __init__(self, domain, server_ip):
-        self.domain = domain
+    def __init__(self, domains, server_ip, raw_domains):
+        self.domains = domains
+        self.raw_domains = raw_domains
         self.server_ip = server_ip
-        self.txt = ''
+        self.txt = []
 
     def resolve(self, request, handler):
         reply = request.reply()
@@ -28,18 +29,36 @@ class Resolver(object):
 
         # subdomain = qname._decode(qname.label[1]).lower()
         first_domain_part = qname._decode(qname.label[0]).lower()
+        index = 0
+
+        second_domain_part = ''
+        for i in range(len(qname.label)):
+            if i == 0:
+                continue
+            elif i == 1:
+                second_domain_part += qname._decode(qname.label[i]).lower()
+            else:
+                second_domain_part +=  '.'+qname._decode(qname.label[i]).lower()
+        # print(second_domain_part)
+
+        # print(self.raw_domains)
+        for i in range(len(self.raw_domains)):
+            if  second_domain_part == self.raw_domains[i]:
+                index = i
+        # print(self.domains)
+        # print(index)
 
         if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT and self.txt != ''):
-            reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt)));
+            reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[index])));
             return reply
 
         reply.header.rcode = dnslib.RCODE.NXDOMAIN
         return reply
 
-def setup_resolver(ip, dom):
-    domain = dnslib.label('_acme-challenge.'+dom)
-
-    resolver = Resolver(domain, dnslib.A(ip))
+def setup_resolver(ip, domains):
+    # domain = dnslib.label('_acme-challenge.'+dom)
+    doms = [dnslib.label('_acme-challenge.'+dom) for dom in domains]
+    resolver = Resolver(doms, dnslib.A(ip), domains)
     return resolver
 
 
@@ -51,21 +70,13 @@ def run_server(resolver, ip):
     udp_server.start_thread()
     return udp_server
 
-
-# if __name__ == '__main__':
+# resolver = setup_resolver('127.0.0.1', ["example.com", "test.example.com"])
+# udp_server = run_server(resolver, '127.0.0.1')
+# resolver.txt.append("hello")
+# resolver.txt.append("test")
 #
-#     # domain = dnslib.label('www.example.com')
-#     domain = dnslib.label('_acme-challenge.www.example.com')
-#     logger = dnslib.server.DNSLogger("pass")
-#     port=10053
-#     resolver = Resolver(domain, dnslib.A('1.2.3.4'))
-#     udp_server = dnslib.server.DNSServer(resolver, address='127.0.0.1', port=port, logger=logger)
-#
-#     print('starting DNS server on port', port)
-#     udp_server.start_thread()
-#
-#     try:
-#         while udp_server.isAlive():
-#             time.sleep(1)
-#     except KeyboardInterrupt:
-#         pass
+# try:
+#     while udp_server.isAlive():
+#         time.sleep(1)
+# except KeyboardInterrupt:
+#     pass

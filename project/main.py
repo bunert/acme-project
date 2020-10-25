@@ -32,8 +32,7 @@ else:
     print("wrong challenge")
 
 # start dnsServer using the args.record as ip address
-print(args.domain[0])
-resolver = dnsServer.setup_resolver(args.record, args.domain[0])
+resolver = dnsServer.setup_resolver(args.record, args.domain)
 udp_server = dnsServer.run_server(resolver, args.record)
 
 
@@ -70,7 +69,8 @@ for i in range(len(args.domain)):
     else:
         # dns challenge
         c = test_client.get_challenge(i, challenge)
-        resolver.txt = c.dnsAuthorization
+        resolver.txt.append(c.dnsAuthorization)
+        # print(resolver.txt)
 
 for i in range(len(args.domain)):
     test_client.post_ChallengeReady(i, challenge)
@@ -99,7 +99,7 @@ if (status == 'valid'):
     # start certificateHttpServer
     certServer = certificateHttpServer.start_server(args.record)
 
-if (args.revoke):
+if (args.revoke and status == 'valid'):
     print("revoke cert")
     test_client.post_revokeCert(cert)
 
