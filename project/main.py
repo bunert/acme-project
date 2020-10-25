@@ -61,8 +61,8 @@ index=0
 test_client.post_newAuthz(index)
 
 if (challenge=='http-01'):
-    challenge_http_url = args.domain[0] #'http://localhost:5002/'
-    test_client.post_newHttpChallenge(index, challenge_http_url, challenge)
+    # challenge_http_url ='http://localhost:5002/'
+    test_client.post_newHttpChallenge(index, args.record, challenge)
 else:
     # dns challenge
     c = test_client.get_challenge(index, challenge)

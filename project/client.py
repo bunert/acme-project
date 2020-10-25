@@ -199,10 +199,10 @@ class ACMEClient(object):
             # handle response
             self.nonce = resp.headers['Replay-nonce']
 
-    def post_newHttpChallenge(self, index, http_url, challenge):
+    def post_newHttpChallenge(self, index, ip, challenge):
         headers = {'content-type': 'application/jose+json'}
         c = self.get_challenge(index, challenge)
-        url = 'http://'+http_url+'/.well-known/acme-challenge/'+c.token
+        url = 'http://'+ip+':5002' +'/.well-known/acme-challenge/'+c.token
         data = json.dumps({"keyAuthorization":c.keyAuthorization})
         resp = requests.post(url, data=data, headers=headers)
         if resp.status_code not in [requests.codes.created]:
