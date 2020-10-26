@@ -204,7 +204,7 @@ class JSONWebSignature(object):
 class Identifier(object):
     def __init__(self, value):
         self.value = value
-        print("identifier value: ", self.value)
+        # print("identifier value: ", self.value)
 
     def set_IdentifierData(self, json, jws):
         self.challenge_array = [Challenge(c, jws) for c in json["challenges"]]

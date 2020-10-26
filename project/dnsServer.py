@@ -10,7 +10,7 @@ class Resolver(object):
         self.domains = domains
         self.raw_domains = raw_domains
         self.server_ip = server_ip
-        self.txt = [None] * len(raw_domains)
+        self.txt = {}
 
     def resolve(self, request, handler):
         reply = request.reply()
@@ -29,7 +29,7 @@ class Resolver(object):
 
         # subdomain = qname._decode(qname.label[1]).lower()
         first_domain_part = qname._decode(qname.label[0]).lower()
-        index = []
+        # index = []
 
         second_domain_part = ''
         for i in range(len(qname.label)):
@@ -41,17 +41,20 @@ class Resolver(object):
                 second_domain_part +=  '.'+qname._decode(qname.label[i]).lower()
         # print(second_domain_part)
 
-        for i in range(len(self.raw_domains)):
-            if  (second_domain_part == self.raw_domains[i] or '*.'+second_domain_part == self.raw_domains[i]):
-                index.append(i)
+        # for i in range(len(self.raw_domains)):
+        #     if  (second_domain_part == self.raw_domains[i] or '*.'+second_domain_part == self.raw_domains[i]):
+        #         index.append(i)
         # print(self.domains)
         # print(index)
-        print("DNS request: ", request)
+        # print("DNS request: ", index)
         # print("result: ", self.txt[index])
 
         if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT):
-            for i in range(len(index)):
-                reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[index[i]])));
+            reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[second_domain_part])));
+            try:
+                reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt['*.'+second_domain_part])));
+            except KeyError:
+                pass
             return reply
 
         reply.header.rcode = dnslib.RCODE.NXDOMAIN
