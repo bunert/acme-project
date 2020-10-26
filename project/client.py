@@ -104,6 +104,7 @@ class ACMEClient(object):
             self.post_newAuthz(index)
         else:
             # handle response
+            # print(resp.text)
             self.nonce = resp.headers['Replay-nonce']
             resp_json = json.loads(resp.text)
             self.identifiers[index].set_IdentifierData(resp_json, self.jws)

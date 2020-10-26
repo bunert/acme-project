@@ -29,7 +29,7 @@ class Resolver(object):
 
         # subdomain = qname._decode(qname.label[1]).lower()
         first_domain_part = qname._decode(qname.label[0]).lower()
-        index = 0
+        index = []
 
         second_domain_part = ''
         for i in range(len(qname.label)):
@@ -41,17 +41,17 @@ class Resolver(object):
                 second_domain_part +=  '.'+qname._decode(qname.label[i]).lower()
         # print(second_domain_part)
 
-        # print(self.raw_domains)
         for i in range(len(self.raw_domains)):
-            if  second_domain_part == self.raw_domains[i]:
-                index = i
+            if  (second_domain_part == self.raw_domains[i] or '*.'+second_domain_part == self.raw_domains[i]):
+                index.append(i)
         # print(self.domains)
         # print(index)
-        print("DNS request for: ", second_domain_part)
-        print("result: ", self.txt[index])
+        print("DNS request: ", request)
+        # print("result: ", self.txt[index])
 
-        if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT and self.txt != ''):
-            reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[index])));
+        if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT):
+            for i in range(len(index)):
+                reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[index[i]])));
             return reply
 
         reply.header.rcode = dnslib.RCODE.NXDOMAIN
@@ -72,10 +72,10 @@ def run_server(resolver, ip):
     udp_server.start_thread()
     return udp_server
 
-# resolver = setup_resolver('127.0.0.1', ["example.com", "test.example.com"])
+# resolver = setup_resolver('127.0.0.1', ["example.com", "*.example.com"])
 # udp_server = run_server(resolver, '127.0.0.1')
-# resolver.txt.append("hello")
-# resolver.txt.append("test")
+# resolver.txt[0] = "hello"
+# resolver.txt[1] = "test"
 #
 # try:
 #     while udp_server.isAlive():

@@ -204,11 +204,16 @@ class JSONWebSignature(object):
 class Identifier(object):
     def __init__(self, value):
         self.value = value
+        print("identifier value: ", self.value)
 
     def set_IdentifierData(self, json, jws):
         self.challenge_array = [Challenge(c, jws) for c in json["challenges"]]
         self.expires = json["expires"]
         self.status = json["status"]
+        try:
+            self.wildcard = json["wildcard"]
+        except KeyError:
+            pass
 
 class Challenge(object):
     def __init__(self, challenge, jws):
