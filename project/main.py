@@ -22,7 +22,7 @@ parser.add_argument('--revoke', dest='revoke',action='store_true', help='revoke 
 args = parser.parse_args()
 
 # TODO: remove (warnings surpression)
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+# requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 if (args.challenge == 'http01'):
     challenge = 'http-01'

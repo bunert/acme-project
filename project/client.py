@@ -23,7 +23,7 @@ class ACMEClient(object):
             self.identifiers[value] = formats.Identifier()
 
     def get_rootCert(self):
-        resp =  requests.get('https://0.0.0.0:15000/roots/0', verify=False)
+        resp =  requests.get('https://localhost:15000/roots/0', verify='pebble.minica.pem')
         cafile = resp.text
         with open ("private.pem", "w") as prv_file:
             print("{}".format(cafile), file=prv_file)
@@ -35,7 +35,8 @@ class ACMEClient(object):
         print("no such challenge exists")
 
     def init_directory(self):
-        resp = requests.get(self.UrlDict["dir"], verify=False)
+        # pebble.minica.pem
+        resp = requests.get(self.UrlDict["dir"], verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("init_directory: ", resp.status_code)
         else:
@@ -45,10 +46,11 @@ class ACMEClient(object):
             self.UrlDict["newNonce"] = dir["newNonce"]
             self.UrlDict["newOrder"] = dir["newOrder"]
             self.UrlDict["revokeCert"] = dir["revokeCert"]
+        # exit(1)
 
 
     def get_newNonce(self):
-        resp = requests.get(self.UrlDict["newNonce"], verify=False)
+        resp = requests.get(self.UrlDict["newNonce"], verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.no_content,requests.codes.ok]:
             print("get_newNonce: ", resp.status_code)
         else:
@@ -60,7 +62,7 @@ class ACMEClient(object):
         self.kid = kid
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(self.UrlDict["newAccount"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["newAccount"], data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.created]:
             print("get_newAccount: ", resp.status_code)
             self.get_newNonce()
@@ -82,7 +84,7 @@ class ACMEClient(object):
         data = self.jws.get_newOrderData(self.UrlDict["newOrder"], self.nonce, self.kid, domains)
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(self.UrlDict["newOrder"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["newOrder"], data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.created]:
             print("get_newOrder: ", resp.status_code)
             self.get_newNonce()
@@ -104,7 +106,7 @@ class ACMEClient(object):
     def post_newAuthz(self, dom):
         data = self.jws.get_newAuthzData(self.identifiers[dom].authorizations_url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
-        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify=False)
+        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_newAuthz: ", resp.status_code)
             self.get_newNonce()
@@ -130,7 +132,7 @@ class ACMEClient(object):
         data = self.jws.get_ChallengeReadyData(url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(url, data=data, headers=headers, verify=False)
+        resp = requests.post(url, data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_ChallengeReady: ", resp.status_code)
             self.get_newNonce()
@@ -144,7 +146,7 @@ class ACMEClient(object):
     def post_checkStatus(self, dom):
         data = self.jws.get_newAuthzData(self.identifiers[dom].authorizations_url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
-        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify=False)
+        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkStatus: ", resp.status_code)
             self.get_newNonce()
@@ -161,7 +163,7 @@ class ACMEClient(object):
         data = self.jws.get_finalizeOrderData(self.UrlDict["finalize"], self.nonce, self.kid, domains)
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(self.UrlDict["finalize"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["finalize"], data=data, headers=headers, verify='pebble.minica.pem')
         # print(resp.text)
         if resp.status_code not in [requests.codes.ok]:
             print("post_finalizeOrder: ", resp.status_code)
@@ -173,7 +175,7 @@ class ACMEClient(object):
     def post_checkOrder(self):
         data = self.jws.get_checkOrderData(self.UrlDict["order"], self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
-        resp = requests.post(self.UrlDict["order"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["order"], data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkOrder: ", resp.status_code)
             self.get_newNonce()
@@ -192,7 +194,7 @@ class ACMEClient(object):
         data = self.jws.get_DownloadCertData(self.UrlDict["cert"], self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(self.UrlDict["cert"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["cert"], data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_DownloadCert: ", resp.status_code)
             self.get_newNonce()
@@ -206,7 +208,7 @@ class ACMEClient(object):
         data = self.jws.get_RevokeCertData(self.UrlDict["revokeCert"], self.nonce, self.kid, cert)
         headers = {'content-type': 'application/jose+json'}
 
-        resp = requests.post(self.UrlDict["revokeCert"], data=data, headers=headers, verify=False)
+        resp = requests.post(self.UrlDict["revokeCert"], data=data, headers=headers, verify='pebble.minica.pem')
         if resp.status_code not in [requests.codes.ok]:
             print("post_revokeCert: ", resp.status_code)
             self.get_newNonce()
