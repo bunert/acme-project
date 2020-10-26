@@ -115,6 +115,13 @@ class ACMEClient(object):
             self.nonce = resp.headers['Replay-nonce']
             resp_json = json.loads(resp.text)
             true_dom = resp_json["identifier"]["value"]
+            wildcard = False
+            try:
+                wildcard = resp_json["wildcard"]
+            except KeyError:
+                pass
+            if (wildcard):
+                true_dom = '*.'+true_dom
             self.identifiers[true_dom].set_IdentifierData(resp_json, self.jws)
 
     def post_ChallengeReady(self, dom, challenge):
