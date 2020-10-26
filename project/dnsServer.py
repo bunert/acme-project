@@ -50,8 +50,8 @@ class Resolver(object):
         # print("result: ", self.txt[index])
 
         if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT):
-            reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[second_domain_part])));
             try:
+                reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[second_domain_part])));
                 reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt['*.'+second_domain_part])));
             except KeyError:
                 pass
