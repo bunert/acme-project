@@ -132,7 +132,7 @@ class JSONWebSignature(object):
 
         return get_jwsObject(jws_protected_header, jws_payload, jws_signature)
 
-    def get_finalizeOrderData(self, url, nonce, kid, identifiers):
+    def get_finalizeOrderData(self, url, nonce, kid, domains):
         header_json = self.get_kidHeader(kid, nonce, url)
         jws_protected_header = b64encode(header_json)
 
@@ -144,7 +144,7 @@ class JSONWebSignature(object):
 
 
 
-        list = [x509.DNSName(elem.value) for elem in identifiers]
+        list = [x509.DNSName(elem) for elem in domains]
 
         csr = x509.CertificateSigningRequestBuilder() \
                 .subject_name(x509.Name([])) \
@@ -202,8 +202,8 @@ class JSONWebSignature(object):
 
 
 class Identifier(object):
-    def __init__(self, value):
-        self.value = value
+    # def __init__(self):
+        # self.value = value
         # print("identifier value: ", self.value)
 
     def set_IdentifierData(self, json, jws):

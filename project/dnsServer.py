@@ -46,15 +46,20 @@ class Resolver(object):
         #         index.append(i)
         # print(self.domains)
         # print(index)
-        # print("DNS request: ", index)
+        # print("DNS request: ", second_domain_part)
+
         # print("result: ", self.txt[index])
 
         if (first_domain_part == '_acme-challenge' and request.q.qtype == dnslib.QTYPE.TXT):
             try:
                 reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt[second_domain_part])));
+            except KeyError:
+                pass
+            try:
                 reply.add_answer(dnslib.RR(qname, dnslib.QTYPE.TXT, ttl=300, rdata=dnslib.TXT(self.txt['*.'+second_domain_part])));
             except KeyError:
                 pass
+            # print("DNS reply: ", reply)
             return reply
 
         reply.header.rcode = dnslib.RCODE.NXDOMAIN

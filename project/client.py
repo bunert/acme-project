@@ -18,7 +18,9 @@ class ACMEClient(object):
         self.ecdsa_sk = sk
         self.ecdsa_pk = pk
         self.jws = formats.JSONWebSignature(self.ecdsa_pk, self.ecdsa_sk)
-        self.identifiers = [formats.Identifier(value) for value in values]
+        self.identifiers = {}
+        for value in values:
+            self.identifiers[value] = formats.Identifier()
 
     def get_rootCert(self):
         resp =  requests.get('https://0.0.0.0:15000/roots/0', verify=False)
@@ -26,8 +28,8 @@ class ACMEClient(object):
         with open ("private.pem", "w") as prv_file:
             print("{}".format(cafile), file=prv_file)
 
-    def get_challenge(self, index, challenge):
-        for c in self.identifiers[index].challenge_array:
+    def get_challenge(self, dom, challenge):
+        for c in self.identifiers[dom].challenge_array:
             if (c.type == challenge):
                 return c
         print("no such challenge exists")
@@ -75,9 +77,9 @@ class ACMEClient(object):
         # required?
         pass
 
-    def post_newOrder(self):
+    def post_newOrder(self, domains):
         # TODO: values as input???
-        data = self.jws.get_newOrderData(self.UrlDict["newOrder"], self.nonce, self.kid, [id.value for id in self.identifiers])
+        data = self.jws.get_newOrderData(self.UrlDict["newOrder"], self.nonce, self.kid, domains)
         headers = {'content-type': 'application/jose+json'}
 
         resp = requests.post(self.UrlDict["newOrder"], data=data, headers=headers, verify=False)
@@ -92,25 +94,31 @@ class ACMEClient(object):
             resp_json = json.loads(resp.text)
             self.expires = resp_json["expires"]
             self.UrlDict["finalize"] = resp_json["finalize"]
-            self.authorizations_url = resp_json["authorizations"]
+            ids= resp_json["identifiers"]
+            urls = resp_json["authorizations"]
+            # print(resp.text)
+            for i in range(len(ids)):
+                # print(ids[i]["value"])
+                self.identifiers[ids[i]["value"]].authorizations_url = urls[i]
 
-    def post_newAuthz(self, index):
-        data = self.jws.get_newAuthzData(self.authorizations_url[index], self.nonce, self.kid)
+    def post_newAuthz(self, dom):
+        data = self.jws.get_newAuthzData(self.identifiers[dom].authorizations_url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
-        resp = requests.post(self.authorizations_url[index], data=data, headers=headers, verify=False)
+        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_newAuthz: ", resp.status_code)
             self.get_newNonce()
-            self.post_newAuthz(index)
+            self.post_newAuthz(dom)
         else:
             # handle response
             # print(resp.text)
             self.nonce = resp.headers['Replay-nonce']
             resp_json = json.loads(resp.text)
-            self.identifiers[index].set_IdentifierData(resp_json, self.jws)
+            true_dom = resp_json["identifier"]["value"]
+            self.identifiers[true_dom].set_IdentifierData(resp_json, self.jws)
 
-    def post_ChallengeReady(self, index, challenge):
-        c = self.get_challenge(index, challenge)
+    def post_ChallengeReady(self, dom, challenge):
+        c = self.get_challenge(dom, challenge)
         url = c.url
         data = self.jws.get_ChallengeReadyData(url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
@@ -119,21 +127,21 @@ class ACMEClient(object):
         if resp.status_code not in [requests.codes.ok]:
             print("post_ChallengeReady: ", resp.status_code)
             self.get_newNonce()
-            self.post_ChallengeReady(index, challenge)
+            self.post_ChallengeReady(dom, challenge)
             # TODO: On receiving such an error, the client SHOULD undo any actions that have been
             # taken to fulfill the challenge, e.g., removing files that have been provisioned to a web server.
         else:
             # handle response
             self.nonce = resp.headers['Replay-nonce']
 
-    def post_checkStatus(self, index):
-        data = self.jws.get_newAuthzData(self.authorizations_url[index], self.nonce, self.kid)
+    def post_checkStatus(self, dom):
+        data = self.jws.get_newAuthzData(self.identifiers[dom].authorizations_url, self.nonce, self.kid)
         headers = {'content-type': 'application/jose+json'}
-        resp = requests.post(self.authorizations_url[index], data=data, headers=headers, verify=False)
+        resp = requests.post(self.identifiers[dom].authorizations_url, data=data, headers=headers, verify=False)
         if resp.status_code not in [requests.codes.ok]:
             print("post_checkStatus: ", resp.status_code)
             self.get_newNonce()
-            self.post_checkStatus(index)
+            self.post_checkStatus(dom)
         else:
             # handle response
             # print(resp.text)
@@ -142,8 +150,8 @@ class ACMEClient(object):
 
 
 
-    def post_finalizeOrder(self):
-        data = self.jws.get_finalizeOrderData(self.UrlDict["finalize"], self.nonce, self.kid, self.identifiers)
+    def post_finalizeOrder(self, domains):
+        data = self.jws.get_finalizeOrderData(self.UrlDict["finalize"], self.nonce, self.kid, domains)
         headers = {'content-type': 'application/jose+json'}
 
         resp = requests.post(self.UrlDict["finalize"], data=data, headers=headers, verify=False)
@@ -200,9 +208,9 @@ class ACMEClient(object):
             # handle response
             self.nonce = resp.headers['Replay-nonce']
 
-    def post_newHttpChallenge(self, index, ip, challenge):
+    def post_newHttpChallenge(self, dom, ip, challenge):
         headers = {'content-type': 'application/jose+json'}
-        c = self.get_challenge(index, challenge)
+        c = self.get_challenge(dom, challenge)
         url = 'http://'+ip+':5002' +'/.well-known/acme-challenge/'+c.token
         data = json.dumps({"keyAuthorization":c.keyAuthorization})
         resp = requests.post(url, data=data, headers=headers)

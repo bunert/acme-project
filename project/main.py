@@ -53,45 +53,36 @@ test_client.get_newNonce()
 
 test_client.post_newAccount()
 
-test_client.post_newOrder()
+test_client.post_newOrder(args.domain)
 
-# index indicated for which domain in array ['www.example.com', 'example.com']
-# index=0
-for i in range(len(args.domain)):
-    test_client.post_newAuthz(i)
 
-# test_client.post_newAuthz(index)
+for dom in args.domain:
+    test_client.post_newAuthz(dom)
 
-for i in range(len(args.domain)):
+
+for dom in args.domain:
     if (challenge=='http-01'):
         # challenge_http_url ='http://localhost:5002/'
-        test_client.post_newHttpChallenge(i, args.record, challenge)
+        test_client.post_newHttpChallenge(dom, args.record, challenge)
     else:
         # dns challenge
-        c = test_client.get_challenge(i, challenge)
-        # print(test_client.identifiers[i].value)
-        resolver.txt[test_client.identifiers[i].value] = c.dnsAuthorization
-        # print("added dns entry: ", args.domain[i])
-        # print(c.dnsAuthorization)
-        # print(resolver.txt)
+        c = test_client.get_challenge(dom, challenge)
+        resolver.txt[dom] = c.dnsAuthorization
+        # print("added dns txt for: ", dom)
+        # print("dns txt value: ", c.dnsAuthorization)
 
-for i in range(len(args.domain)):
-    test_client.post_ChallengeReady(i, challenge)
 
-# time.sleep(5)
-# test_client.post_checkStatus(index)
-#
-# time.sleep(5)
-# test_client.post_checkStatus(index)
-#
-# time.sleep(5)
+for dom in args.domain:
+    test_client.post_ChallengeReady(dom, challenge)
+
+
 limit = 0
 while (test_client.post_checkOrder() != 'ready' and limit < 10):
     limit += 1
     time.sleep(2)
 
 
-test_client.post_finalizeOrder()
+test_client.post_finalizeOrder(args.domain)
 
 status = test_client.post_checkOrder()
 
